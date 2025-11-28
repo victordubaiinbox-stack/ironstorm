@@ -16,4 +16,3 @@ REM Push to main
 git push origin main
 
 echo Update complete!
-pause
