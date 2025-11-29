@@ -1,28 +1,28 @@
 
-It looks like your message got cut off at "just add"!
+Here is the updated game.
 
-Since you didn't specify *what* to add, but you want to keep the Level 50 grind and everything else exactly the same, I have added the most important feature for a grinding game: **A SAVE SYSTEM.**
-
-### **NEW FEATURES ADDED:**
-1.  **SAVE & LOAD:** You can now **Save** your Level, Stats, Weapons, and Armor in the **'N' (Upgrade) Menu**.
-2.  **AUTO-SAVE:** The game automatically saves every time you complete a wave.
-3.  **Everything else is identical:** Code 67, Admin Menu (Y), Level 50 Cap, Boss Waves (3, 6, 9...), and Stats are exactly as before.
+### **WHAT CHANGED:**
+1.  **Code Entry:** I removed the ability to type "67" while walking around.
+2.  **Inventory Button:** Now, open your Inventory (**Press I**). There is a new button at the bottom right called **"ENTER SECRET CODE"**.
+3.  **Input Box:** Clicking that button opens a box where you type **67** and hit Submit.
+4.  **Result:** If correct, Cheats unlock, and you can use the **Y** key for the Admin Menu.
 
 ### **INSTRUCTIONS:**
 1.  **Copy** the code below.
 2.  **Paste** into Notepad.
-3.  **Save As** `zombiedogs_save_system.html`.
-4.  **Play!** (Press **N** to find the new Save buttons).
+3.  **Save As** `zombiedogs_inventory_code.html` (Select "All Files").
+4.  **Play!**
 
 ```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bolton Dragon: SAVE SYSTEM ADDED</title>
+    <title>Bolton Dragon: INVENTORY CODE ENTRY</title>
     <style>
         /* --- CORE ANIMATIONS & GLOBAL STYLES --- */
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes scanline { 0% { transform: translateY(-100vh); } 100% { transform: translateY(100vh); } }
         @keyframes neonPulse { 0% { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00ffff, 0 0 40px #00ffff; } 50% { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #00ffff, 0 0 20px #00ffff; } 100% { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00ffff, 0 0 40px #00ffff; } }
         @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
         @keyframes barFlow { 0% { background-position: 0 0; } 100% { background-position: 50px 50px; } }
@@ -383,6 +383,29 @@ Since you didn't specify *what* to add, but you want to keep the Level 50 grind 
         .autosell-btn.active { border-color: #00ff00; color: #00ff00; background: rgba(0, 255, 0, 0.1); box-shadow: inset 0 0 10px rgba(0,255,0,0.2); }
         .autosell-btn span { float: right; font-weight: bold; }
 
+        /* --- CODE ENTRY BUTTON --- */
+        #code-entry-btn {
+            position: absolute; bottom: 10px; right: 10px;
+            padding: 10px 15px; background: #330033; border: 1px solid #ff00ff;
+            color: #ff00ff; font-weight: bold; cursor: pointer; font-size: 10px;
+            transition: 0.2s;
+        }
+        #code-entry-btn:hover { background: #ff00ff; color: black; }
+
+        /* --- CODE MODAL --- */
+        #code-modal {
+            position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.9); z-index: 1000;
+            display: none; align-items: center; justify-content: center; flex-direction: column;
+        }
+        #code-modal input {
+            font-size: 30px; padding: 10px; width: 100px; text-align: center;
+            background: black; color: #00ff00; border: 2px solid #00ff00; margin-bottom: 20px;
+        }
+        #code-modal button {
+            padding: 10px 30px; font-size: 20px; background: #00ff00; color: black; border: none; font-weight: bold; cursor: pointer; margin: 5px;
+        }
+
         /* --- SHOP SCREEN --- */
         #shop-screen {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -516,6 +539,16 @@ Since you didn't specify *what* to add, but you want to keep the Level 50 grind 
     <div id="skip-btn" onclick="skipPrep()">PRESS [ENTER] TO START</div>
     <div id="crosshair"></div>
    
+    <!-- CODE MODAL -->
+    <div id="code-modal">
+        <h2 style="color:white; margin-bottom:20px;">ENTER SECRET CODE</h2>
+        <input type="text" id="code-input" maxlength="2" autocomplete="off">
+        <div>
+            <button onclick="submitCode()">SUBMIT</button>
+            <button style="background:red;" onclick="hideCodePrompt()">CANCEL</button>
+        </div>
+    </div>
+
     <!-- ADMIN SCREEN -->
     <div id="admin-screen">
         <button id="close-admin" onclick="toggleAdmin()">X</button>
@@ -587,6 +620,8 @@ Since you didn't specify *what* to add, but you want to keep the Level 50 grind 
             <div id="as-legendary" class="autosell-btn" onclick="toggleAuto('legendary')">LEGENDARY <span>$150</span></div>
             <div id="as-mythic" class="autosell-btn" onclick="toggleAuto('mythic')">MYTHICAL <span>$800</span></div>
             <div id="as-prismatic" class="autosell-btn" onclick="toggleAuto('prismatic')">PRISMATIC <span>$1500</span></div>
+            
+            <div id="code-entry-btn" onclick="showCodePrompt()">ENTER SECRET CODE</div>
         </div>
     </div>
 
@@ -1486,14 +1521,9 @@ Since you didn't specify *what* to add, but you want to keep the Level 50 grind 
                 unlockedWeapons = data.unlockedWeapons || [0];
                 statLevels = data.statLevels || {str:0, spd:0, def:0, hp:0};
                 wave = data.wave || 1;
-                // Complex restore for arrays
                 inventory.length = 0; if(data.inventory) data.inventory.forEach(i => inventory.push(i));
                 if(data.equipment) Object.assign(equipment, data.equipment);
-                
-                recalcStats();
-                updateTrainerUI();
-                gainXp(0); // Refresh bar
-                renderHotbar();
+                recalcStats(); updateTrainerUI(); gainXp(0); renderHotbar();
                 spawnStyleText("GAME LOADED!", "#00ff00");
             } else {
                 spawnStyleText("NO SAVE FOUND", "red");
@@ -1501,6 +1531,25 @@ Since you didn't specify *what* to add, but you want to keep the Level 50 grind 
         }
 
         // --- ADMIN FUNCTIONS ---
+        function showCodePrompt() {
+            document.getElementById('code-modal').style.display = 'flex';
+            document.getElementById('code-input').value = '';
+            document.getElementById('code-input').focus();
+        }
+        function hideCodePrompt() {
+            document.getElementById('code-modal').style.display = 'none';
+        }
+        function submitCode() {
+            const val = document.getElementById('code-input').value;
+            if(val === "67") {
+                cheatsUnlocked = true;
+                spawnStyleText("CHEATS UNLOCKED! PRESS [Y]", "#00ff00");
+                hideCodePrompt();
+            } else {
+                spawnStyleText("INVALID CODE", "red");
+            }
+        }
+
         function toggleAdmin() {
             if(!cheatsUnlocked) return;
             adminOpen = !adminOpen;
@@ -1546,17 +1595,6 @@ Since you didn't specify *what* to add, but you want to keep the Level 50 grind 
         const keys={}; let swingT=0;
         document.addEventListener('keydown',e=>{ 
             keys[e.code]=true; 
-            
-            // CHEAT CODE CHECKER
-            if(e.key >= '0' && e.key <= '9') {
-                inputBuffer += e.key;
-                if(inputBuffer.endsWith("67")) {
-                    cheatsUnlocked = true;
-                    spawnStyleText("CHEATS UNLOCKED! PRESS [Y]", "#00ff00");
-                    inputBuffer = "";
-                }
-            }
-
             if(e.key>='1' && e.key<='9') switchWep(parseInt(e.key)-1); 
             if(e.code==='KeyR') activateRage(); 
             if(e.code==='KeyI') toggleInventory(); 
@@ -1596,7 +1634,7 @@ Since you didn't specify *what* to add, but you want to keep the Level 50 grind 
 
         // --- SHOOTING ---
         document.addEventListener('mousedown', ()=> {
-            if(isInventoryOpen || shopOpen || trainerOpen || adminOpen) return;
+            if(isInventoryOpen || shopOpen || trainerOpen || adminOpen || document.getElementById('code-modal').style.display === 'flex') return;
             if(document.pointerLockElement!==document.body) document.body.requestPointerLock();
             else if(swingT<=0) {
                 const w = weapons[weapons[curWep] ? curWep : 0];
@@ -1666,13 +1704,13 @@ Since you didn't specify *what* to add, but you want to keep the Level 50 grind 
                 }
             }
         }
-        document.addEventListener('mousemove',e=>{ if(document.pointerLockElement===document.body && !isInventoryOpen && !shopOpen && !trainerOpen && !adminOpen){ camera.rotation.y-=e.movementX*0.002; camera.rotation.x-=e.movementY*0.002; } });
+        document.addEventListener('mousemove',e=>{ if(document.pointerLockElement===document.body && !isInventoryOpen && !shopOpen && !trainerOpen && !adminOpen && document.getElementById('code-modal').style.display !== 'flex'){ camera.rotation.y-=e.movementX*0.002; camera.rotation.x-=e.movementY*0.002; } });
 
         // --- GAME LOOP ---
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate); const dt = Math.min(clock.getDelta(), 0.1); const t = Date.now()*0.001;
-            if (isInventoryOpen || shopOpen || trainerOpen || adminOpen) { renderer.render(scene, camera); return; }
+            if (isInventoryOpen || shopOpen || trainerOpen || adminOpen || document.getElementById('code-modal').style.display === 'flex') { renderer.render(scene, camera); return; }
             if(isPrepPhase) { prepTimer -= dt; document.getElementById('prep-timer').innerText = "PREPARE: " + Math.ceil(prepTimer); if(prepTimer <= 0) startCombatWave(); }
             if(meteorCooldown > 0) meteorCooldown -= dt;
             for(let i=damagePopups.length-1; i>=0; i--) { const p = damagePopups[i]; p.life -= dt; p.worldPos.add(p.vel.clone().multiplyScalar(dt)); p.vel.y -= 10 * dt; const screenPos = p.worldPos.clone().project(camera); const x = (screenPos.x * .5 + .5) * window.innerWidth; const y = (-(screenPos.y * .5) + .5) * window.innerHeight; p.div.style.left = (x - 20) + 'px'; p.div.style.top = (y - 20) + 'px'; p.div.style.opacity = p.life; p.div.style.transform = `scale(${1 + (1-p.life)*0.5})`; if(p.life <= 0 || screenPos.z > 1) { p.div.remove(); damagePopups.splice(i, 1); } }
