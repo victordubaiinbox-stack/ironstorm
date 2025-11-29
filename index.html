@@ -1,16 +1,16 @@
 
-Here is the updated game.
+I apologize if it was hard to find! I have made the **"ENTER CODE"** button **huge, flashing, and impossible to miss** inside the Inventory.
 
-### **WHAT CHANGED:**
-1.  **Code Entry:** I removed the ability to type "67" while walking around.
-2.  **Inventory Button:** Now, open your Inventory (**Press I**). There is a new button at the bottom right called **"ENTER SECRET CODE"**.
-3.  **Input Box:** Clicking that button opens a box where you type **67** and hit Submit.
-4.  **Result:** If correct, Cheats unlock, and you can use the **Y** key for the Admin Menu.
+### **HOW TO USE CHEATS:**
+1.  Press **[I]** to open your Inventory.
+2.  Look at the **Right Side** (under Auto-Sell). There is now a **BIG FLASHING PURPLE BUTTON** that says **"ENTER SECRET CODE"**.
+3.  Click it, type **67**, and click **SUBMIT**.
+4.  Close Inventory, then press **[Y]** to open the God Mode Menu.
 
 ### **INSTRUCTIONS:**
 1.  **Copy** the code below.
 2.  **Paste** into Notepad.
-3.  **Save As** `zombiedogs_inventory_code.html` (Select "All Files").
+3.  **Save As** `zombiedogs_admin_fixed.html`.
 4.  **Play!**
 
 ```html
@@ -18,12 +18,12 @@ Here is the updated game.
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bolton Dragon: INVENTORY CODE ENTRY</title>
+    <title>Bolton Dragon: CHEAT CODE BUTTON FIXED</title>
     <style>
         /* --- CORE ANIMATIONS & GLOBAL STYLES --- */
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        @keyframes scanline { 0% { transform: translateY(-100vh); } 100% { transform: translateY(100vh); } }
         @keyframes neonPulse { 0% { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00ffff, 0 0 40px #00ffff; } 50% { text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #00ffff, 0 0 20px #00ffff; } 100% { text-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #00ffff, 0 0 40px #00ffff; } }
+        @keyframes btnFlash { 0% { background: #330033; border-color: #ff00ff; transform: scale(1); } 50% { background: #ff00ff; border-color: white; transform: scale(1.05); } 100% { background: #330033; border-color: #ff00ff; transform: scale(1); } }
         @keyframes popIn { 0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; } 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; } }
         @keyframes barFlow { 0% { background-position: 0 0; } 100% { background-position: 50px 50px; } }
         @keyframes critPop { 0% { transform: scale(1); } 50% { transform: scale(1.5) rotate(10deg); } 100% { transform: scale(1); } }
@@ -295,7 +295,7 @@ Here is the updated game.
        
         #char-panel { width: 30%; display: flex; flex-direction: column; align-items: center; border-right: 2px solid #333; padding-right: 15px; }
         #backpack-panel { width: 45%; display: flex; flex-direction: column; border-right: 2px solid #333; padding-right: 15px;}
-        #autosell-panel { width: 25%; display: flex; flex-direction: column; align-items: center; }
+        #autosell-panel { width: 25%; display: flex; flex-direction: column; align-items: center; position: relative; }
 
         .slot-container { display: flex; flex-direction: column; gap: 15px; align-items: center; width: 100%; margin-top: 20px; }
         .equip-slot {
@@ -385,12 +385,15 @@ Here is the updated game.
 
         /* --- CODE ENTRY BUTTON --- */
         #code-entry-btn {
-            position: absolute; bottom: 10px; right: 10px;
-            padding: 10px 15px; background: #330033; border: 1px solid #ff00ff;
-            color: #ff00ff; font-weight: bold; cursor: pointer; font-size: 10px;
-            transition: 0.2s;
+            width: 100%;
+            padding: 15px; margin-top: 15px;
+            background: #330033; border: 3px solid #ff00ff;
+            color: #ff00ff; font-weight: 900; cursor: pointer; font-size: 16px;
+            text-align: center; text-transform: uppercase;
+            box-shadow: 0 0 15px #ff00ff;
+            animation: btnFlash 1s infinite;
         }
-        #code-entry-btn:hover { background: #ff00ff; color: black; }
+        #code-entry-btn:hover { background: #ff00ff; color: black; transform: scale(1.05); }
 
         /* --- CODE MODAL --- */
         #code-modal {
@@ -1595,6 +1598,7 @@ Here is the updated game.
         const keys={}; let swingT=0;
         document.addEventListener('keydown',e=>{ 
             keys[e.code]=true; 
+            
             if(e.key>='1' && e.key<='9') switchWep(parseInt(e.key)-1); 
             if(e.code==='KeyR') activateRage(); 
             if(e.code==='KeyI') toggleInventory(); 
