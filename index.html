@@ -1,10 +1,17 @@
 
-I have removed the **Spiders** from the game. They will no longer spawn on the walls. Everything else (Meteor Staff, Titan, Zombie Dogs, etc.) remains exactly the same.
+Here is the updated code. I have made the following changes based on your instructions:
+
+1.  **Trainer Frequency:** The Trainer (and shop) now appears **every 2 waves** instead of 4.
+2.  **Stat System:** I completely overhauled the stats to: **Strength, Speed, Endurance, and Health**.
+3.  **Upgrade Cap:** All stats now start at Level 0 and have a **Max Level of 50**.
+4.  **Endurance:** Added "Endurance" which lowers your Dash cooldown (lets you dash more often).
+5.  **Health Upgrade:** Added "Health" which increases your Max HP permanently.
+6.  **Spiders:** Still deleted.
 
 ### **INSTRUCTIONS:**
 1.  **Copy** the code below.
 2.  **Paste** into Notepad.
-3.  **Save As** `zombiedogs_nospiders.html` (Select "All Files").
+3.  **Save As** `zombiedogs_upgrades.html` (Select "All Files").
 4.  **Play!**
 
 ```html
@@ -12,7 +19,7 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Bolton Dragon: NO SPIDERS UPDATE</title>
+    <title>Bolton Dragon: MAX 50 UPGRADES</title>
     <style>
         /* --- CORE ANIMATIONS & GLOBAL STYLES --- */
         @keyframes gradientBG { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
@@ -118,6 +125,14 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
             padding: 10px 20px; background: rgba(0,20,0,0.8);
             border-radius: 10px; box-shadow: 0 0 20px #00ff00, inset 0 0 20px #00ff00;
             transition: transform 0.1s;
+        }
+
+        #xp-hud {
+            position: absolute; top: 80px; right: 20px;
+            font-size: 25px; color: #0088ff; font-weight: 900;
+            text-shadow: 0 0 15px #0088ff; 
+            padding: 5px 15px; background: rgba(0,0,20,0.8);
+            border-radius: 10px; border: 2px solid #0088ff;
         }
 
         /* --- PREP TIMER HUD --- */
@@ -378,6 +393,30 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
         }
         #close-shop-btn:hover { background: white; transform: scale(1.05); box-shadow: 0 0 40px white; }
 
+        /* --- TRAINER SCREEN --- */
+        #trainer-screen {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 500px; height: 600px; 
+            background: rgba(0, 10, 30, 0.95); backdrop-filter: blur(10px);
+            border: 3px solid #0088ff; box-shadow: 0 0 60px rgba(0, 136, 255, 0.4);
+            display: none; flex-direction: column; align-items: center; padding: 25px;
+            pointer-events: auto; z-index: 200; border-radius: 15px;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #trainer-header { font-size: 40px; color: #0088ff; font-weight: 900; text-shadow: 0 0 20px #0088ff; margin-bottom: 20px; font-style: italic;}
+        .stat-row { 
+            display: flex; justify-content: space-between; align-items: center; width: 100%; 
+            background: rgba(255,255,255,0.05); padding: 15px; margin-bottom: 10px; border-radius: 8px; border: 1px solid #444;
+        }
+        .stat-name { font-size: 20px; font-weight: bold; color: white; }
+        .stat-val { color: #00ffff; font-weight: bold; font-size: 14px; }
+        .upgrade-btn {
+            background: #0088ff; color: white; border: none; padding: 8px 15px; 
+            font-weight: bold; cursor: pointer; border-radius: 5px; transition: 0.2s;
+        }
+        .upgrade-btn:hover { background: white; color: black; transform: scale(1.1); }
+        .upgrade-btn:disabled { background: #333; color: #666; cursor: not-allowed; transform: none; }
+
     </style>
 </head>
 <body>
@@ -407,8 +446,9 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
     <div id="boss-warning">BOSS FIGHT!</div>
     <div id="powerup-notify">WEAPON UNLOCKED!</div>
     <div id="climb-hint">WALL CLIMBING ACTIVE</div>
-    <div id="shop-hint">PRESS [E] TO SHOP</div>
+    <div id="shop-hint">PRESS [E] TO INTERACT</div>
     <div id="money-hud">$0</div>
+    <div id="xp-hud">XP: 0</div>
     <div id="prep-timer">PREPARE: 60</div>
     <div id="crosshair"></div>
    
@@ -459,6 +499,47 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
         <div id="shop-money">CASH: $0</div>
         <div id="shop-grid"></div>
         <button id="close-shop-btn" onclick="closeShop()">EXIT SHOP</button>
+    </div>
+
+    <!-- TRAINER SCREEN -->
+    <div id="trainer-screen">
+        <div id="trainer-header">STAT TRAINER</div>
+        <div id="trainer-xp" style="margin-bottom:20px; font-size:20px; color:#00ffff;">XP: 0</div>
+        <div style="margin-bottom:15px; color:#aaaaaa; font-size:12px;">MAX LEVEL 50 PER STAT</div>
+        
+        <div class="stat-row">
+            <div>
+                <div class="stat-name">STRENGTH</div>
+                <div class="stat-val" id="disp-str">Lvl 0/50</div>
+            </div>
+            <button class="upgrade-btn" onclick="upgradeStat('str')">UPGRADE (500 XP)</button>
+        </div>
+
+        <div class="stat-row">
+            <div>
+                <div class="stat-name">SPEED</div>
+                <div class="stat-val" id="disp-spd">Lvl 0/50</div>
+            </div>
+            <button class="upgrade-btn" onclick="upgradeStat('spd')">UPGRADE (500 XP)</button>
+        </div>
+
+        <div class="stat-row">
+            <div>
+                <div class="stat-name">ENDURANCE</div>
+                <div class="stat-val" id="disp-end">Lvl 0/50</div>
+            </div>
+            <button class="upgrade-btn" onclick="upgradeStat('end')">UPGRADE (500 XP)</button>
+        </div>
+
+        <div class="stat-row">
+            <div>
+                <div class="stat-name">HEALTH</div>
+                <div class="stat-val" id="disp-hp">Lvl 0/50</div>
+            </div>
+            <button class="upgrade-btn" onclick="upgradeStat('hp')">UPGRADE (500 XP)</button>
+        </div>
+
+        <button id="close-shop-btn" style="background:#0088ff; box-shadow:0 0 20px #0088ff;" onclick="closeTrainer()">DONE</button>
     </div>
 
     <div id="ui-layer">
@@ -523,6 +604,8 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
             robotHead: new THREE.MeshStandardMaterial({ color: 0x111111, metalness: 0.9, roughness: 0.1 }),
             merchBody: new THREE.MeshStandardMaterial({ color: 0x002244, metalness: 0.8, roughness: 0.2 }),
             merchGold: new THREE.MeshStandardMaterial({ color: 0xffaa00, metalness: 1.0 }),
+            trainerBody: new THREE.MeshStandardMaterial({ color: 0x004488, metalness: 0.9, roughness: 0.1 }),
+            trainerGlow: new THREE.MeshBasicMaterial({ color: 0x00ffff }),
             spiderBody: new THREE.MeshStandardMaterial({ color: 0x050505, metalness: 0.5, roughness: 0.5 }),
             spiderLeg: new THREE.MeshStandardMaterial({ color: 0x330000 }),
             spiderEye: new THREE.MeshBasicMaterial({ color: 0xff0000 }),
@@ -558,11 +641,13 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
         scene.add(floorMesh);
         let walls = [];
         let merchantGroup = null;
+        let trainerGroup = null;
 
         function clearWorld() {
             walls.forEach(w => scene.remove(w.mesh));
             walls = [];
             if(merchantGroup) { scene.remove(merchantGroup); merchantGroup = null; }
+            if(trainerGroup) { scene.remove(trainerGroup); trainerGroup = null; }
         }
 
         function createWall(w, h, d, x, z, rotY, mat=mats.wall) {
@@ -590,10 +675,23 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
             const signB = new THREE.Mesh(new THREE.BoxGeometry(3.1,0.9,0.1), new THREE.MeshBasicMaterial({color:0x00ff00})); signB.position.set(0, 4.5, -0.1);
             g.add(sign); g.add(signB);
             
-            g.userData = { sign: sign, bot: bot, time: 0 };
+            g.userData = { sign: sign, bot: bot, time: 0, type: 'merchant' };
             scene.add(g); merchantGroup = g;
             walls.push({mesh: table, w:6, h:2, d:2, x:xPos, z:zPos, rot:0});
             merchantGroup.visible = false; 
+        }
+
+        function buildTrainer(xPos=-15, zPos=15) {
+            const g = new THREE.Group(); g.position.set(xPos, 2, zPos); g.rotation.y = Math.PI/4;
+            // Hovering Cyber Monk
+            const body = new THREE.Mesh(new THREE.OctahedronGeometry(0.8), mats.trainerBody);
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.4), mats.trainerBody); head.position.y = 1.0;
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.05, 16, 32), mats.trainerGlow);
+            g.add(body); g.add(head); g.add(ring);
+            
+            g.userData = { time:0, type: 'trainer' };
+            scene.add(g); trainerGroup = g;
+            trainerGroup.visible = false;
         }
 
         // --- MAP GENERATORS ---
@@ -620,7 +718,7 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
                 createWall(10, 4, 10, 0, 0, 0); 
                 createWall(100, 15, 5, 0, 55, 0); createWall(100, 15, 5, 0, -55, 0);
                 createWall(5, 15, 100, 55, 0, 0); createWall(5, 15, 100, -55, 0, 0);
-                buildMerchant(25, 25);
+                buildMerchant(25, 25); buildTrainer(-25, 25);
             }
             else if(id === 2) { // Neon City
                 mats.floor.color.setHex(0x222222); mats.floor.roughness = 0.2; mats.floor.metalness = 0.5;
@@ -637,7 +735,7 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
                 }
                 createWall(20, 20, 4, 30, 0, Math.PI/2); createWall(20, 20, 4, -30, 0, Math.PI/2); 
                 createWall(20, 20, 4, 0, 30, 0); createWall(20, 20, 4, 0, -30, 0);
-                buildMerchant(15, 15);
+                buildMerchant(15, 15); buildTrainer(-15, 15);
             }
             else if(id === 3) { // Magma Core
                 mats.floor.color.setHex(0x551111); mats.floor.roughness = 0.9; mats.floor.metalness = 0.1; 
@@ -655,7 +753,7 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
                 }
                 createWall(100, 20, 5, 0, 55, 0, mats.bossOmega); createWall(100, 20, 5, 0, -55, 0, mats.bossOmega);
                 createWall(5, 20, 100, 55, 0, 0, mats.bossOmega); createWall(5, 20, 100, -55, 0, 0, mats.bossOmega);
-                buildMerchant(30, 30);
+                buildMerchant(30, 30); buildTrainer(-30, 30);
             }
             else if(id === 4) { // Moon Base
                 mats.floor.color.setHex(0x888888); mats.floor.roughness = 1.0; mats.floor.metalness = 0.0;
@@ -671,7 +769,7 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
                    t.rotation.x = Math.PI/2; t.position.set((Math.random()-0.5)*70, 0.2, (Math.random()-0.5)*70); t.receiveShadow = true; scene.add(t);
                 }
                 createWall(5, 12, 5, 15, 15, 0, mats.wall); createWall(5, 12, 5, -15, -15, 0, mats.wall);
-                buildMerchant(0, 20);
+                buildMerchant(0, 20); buildTrainer(-20, 0);
             }
 
             wave = 1;
@@ -907,9 +1005,15 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
         renderHotbar(); switchWep(0);
 
         // --- 5. COMPLEX LOOT SYSTEM ---
-        let isInventoryOpen = false; let shopOpen = false;
+        let isInventoryOpen = false; let shopOpen = false; let trainerOpen = false;
         const inventory = []; const equipment = { head: null, chest: null, legs: null, feet: null };
         let money = 0;
+        let xp = 0;
+        
+        // --- UPGRADE SYSTEM STATS ---
+        let statLevels = { str: 0, spd: 0, end: 0, hp: 0 };
+        const MAX_LEVEL = 50;
+
         const autoSellConfig = { common: false, rare: false, epic: false, legendary: false, mythic: false, prismatic: false };
 
         const RARITIES = [
@@ -944,7 +1048,7 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
         }
 
         function toggleInventory() {
-            if(shopOpen) return;
+            if(shopOpen || trainerOpen) return;
             isInventoryOpen = !isInventoryOpen; const scr = document.getElementById('inventory-screen');
             const pauseInd = document.getElementById('pause-indicator');
             if(isInventoryOpen) {
@@ -1014,9 +1118,17 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
             if(inventory.length < 30) { inventory.push(item); spawnStyleText("GOT: "+item.name, item.rarityId==='prismatic'?'white':(item.rarityId==='mythic'?'#ff0000':(item.rarityId==='legendary'?'#ffaa00':'#00ff00'))); if(isInventoryOpen) renderInventory(); } else spawnStyleText("BAG FULL", "red");
         }
 
-        // --- SHOP LOGIC ---
+        function gainXp(amount) {
+            xp += amount;
+            document.getElementById('xp-hud').innerText = "XP: " + xp;
+            spawnStyleText("+" + amount + " XP", "#00ffff");
+        }
+
+        // --- SHOP & TRAINER LOGIC ---
         let shopItems = [];
         let canOpenShop = false;
+        let canOpenTrainer = false;
+
         function openShop() {
             if(shopOpen) return;
             shopOpen = true; document.exitPointerLock();
@@ -1066,6 +1178,43 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
 
         function closeShop() { shopOpen = false; document.getElementById('shop-screen').style.display = 'none'; document.body.requestPointerLock(); }
 
+        // --- TRAINER FUNCTIONS ---
+        function openTrainer() {
+            if(trainerOpen) return;
+            trainerOpen = true; document.exitPointerLock();
+            document.getElementById('trainer-screen').style.display = 'flex';
+            updateTrainerUI();
+        }
+
+        function updateTrainerUI() {
+            document.getElementById('trainer-xp').innerText = "XP: " + xp;
+            document.getElementById('disp-str').innerText = `Lvl ${statLevels.str}/${MAX_LEVEL}`;
+            document.getElementById('disp-spd').innerText = `Lvl ${statLevels.spd}/${MAX_LEVEL}`;
+            document.getElementById('disp-end').innerText = `Lvl ${statLevels.end}/${MAX_LEVEL}`;
+            document.getElementById('disp-hp').innerText = `Lvl ${statLevels.hp}/${MAX_LEVEL}`;
+        }
+
+        function upgradeStat(type) {
+            const cost = 500;
+            if(xp >= cost) {
+                if(statLevels[type] < MAX_LEVEL) {
+                    xp -= cost;
+                    statLevels[type]++;
+                    updateTrainerUI();
+                    document.getElementById('xp-hud').innerText = "XP: " + xp;
+                    recalcStats();
+                } else {
+                    spawnStyleText("MAX LEVEL REACHED", "red");
+                }
+            } else {
+                spawnStyleText("NEED 500 XP", "red");
+            }
+        }
+
+        function closeTrainer() {
+            trainerOpen = false; document.getElementById('trainer-screen').style.display = 'none'; document.body.requestPointerLock();
+        }
+
         // --- 6. GAME LOGIC ---
         const mobs = []; const mobHitboxes = []; const fireballs = []; const arrows = []; const drops = [];
         let wave = 1; let rage = 0; let rageMode = false; let rageTimer = 0;
@@ -1076,6 +1225,8 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
 
         function recalcStats() {
             let bonus = 0; player.abilities = { speed:1, jump:1, thorns:0, lifesteal:0, autoRage:0 }; player.regen = 5;
+            
+            // Equipment Bonuses
             Object.values(equipment).forEach(e => {
                 if(e) {
                     bonus += e.hpBonus;
@@ -1085,7 +1236,18 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
                     if(e.rarityId === 'mythic') { if(e.slot === 'head') { player.abilities.lifesteal = 5; player.abilities.autoRage = 1; } player.regen += 10; }
                 }
             });
-            player.maxHp = 100 + bonus; if(player.hp > player.maxHp) player.hp = player.maxHp;
+
+            // Apply Trainer Health Upgrade (10 HP per level)
+            bonus += (statLevels.hp * 10);
+            
+            player.maxHp = 100 + bonus; 
+            if(player.hp > player.maxHp) player.hp = player.maxHp;
+            
+            // Apply Trainer Speed Upgrade (5% per level)
+            player.abilities.speed *= (1 + statLevels.spd * 0.05);
+
+            // Endurance handled in dash logic
+
             document.getElementById('stat-hp').innerText = player.maxHp; document.getElementById('stat-def').innerText = Math.floor(bonus/10)+"%";
             document.getElementById('stat-regen').innerText = player.regen + " HP/s";
             let txt = ""; if(player.abilities.speed>1) txt+="SPEED UP "; if(player.abilities.jump>1) txt+="JUMP UP "; if(player.abilities.thorns>0) txt+="THORNS "; if(player.abilities.lifesteal>0) txt+="LIFESTEAL "; document.getElementById('ability-list').innerText = txt; updateHUD();
@@ -1168,18 +1330,7 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
             if (isPrepPhase) return;
             const wrapper = new THREE.Group();
             
-            // Random Wall Spider Logic
-            if(!isBoss && !isDog && !isTitan && wave >= 9 && Math.random() > 0.7 && walls.length > 0) {
-                const wall = walls[Math.floor(Math.random()*walls.length)];
-                const spawnX = wall.x + (Math.random()-0.5)*(wall.w-2); const spawnY = 2+Math.random()*(wall.h-4); const spawnZ = wall.z+(Math.random()-0.5)*(wall.d+1);
-                wrapper.position.set(spawnX, spawnY, spawnZ);
-                if(Math.abs(wall.rot)<0.1) wrapper.rotation.y = wall.z>0 ? Math.PI : 0; else wrapper.rotation.y = wall.x>0 ? Math.PI/2 : -Math.PI/2;
-                const spider = buildSpiderMesh(); spider.grp.rotation.x = -Math.PI/2; wrapper.add(spider.grp); spider.parts.forEach(p => mobHitboxes.push(p));
-                const bar = createHealthBar(wrapper, 0x00ff00, 1.5);
-                const data = { type:'spider', hp: 200 + wave*20, maxHp: 200+wave*20, mesh:wrapper, hpBar:bar, speed:0, attackT:0 };
-                spider.parts.forEach(p => p.userData=data); mobs.push(data); scene.add(wrapper);
-                return;
-            }
+            // NO SPIDERS (Logic removed)
 
             const angle = Math.random()*6.28; const dist = (isBoss || isTitan) ? 40 : 20+Math.random()*15;
             wrapper.position.set(Math.sin(angle)*dist, (isBoss||isTitan)?5:0, Math.cos(angle)*dist);
@@ -1231,17 +1382,20 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
 
         // --- WAVE LOGIC ---
         function startWave() {
-            if(wave % 4 === 0) {
+            // TRAINER COMES EVERY 2 WAVES NOW
+            if(wave % 2 === 0) {
                 isPrepPhase = true; prepTimer = 60;
                 document.getElementById('wave-title').innerText = "SHOP TIME!";
                 document.getElementById('wave-title').style.color = "#00ff00";
                 document.getElementById('prep-timer').style.display = 'block';
-                if(merchantGroup) { merchantGroup.visible = true; spawnStyleText("MERCHANT ARRIVED!", "gold"); }
+                if(merchantGroup) { merchantGroup.visible = true; }
+                if(trainerGroup) { trainerGroup.visible = true; spawnStyleText("MERCHANT & TRAINER ARRIVED!", "cyan"); }
             } else { startCombatWave(); }
         }
 
         function startCombatWave() {
             if(merchantGroup) merchantGroup.visible = false;
+            if(trainerGroup) trainerGroup.visible = false;
             document.getElementById('prep-timer').style.display = 'none'; isPrepPhase = false;
             
             // Standard Guaranteed Boss Wave Logic
@@ -1306,7 +1460,10 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
             if(e.key>='1' && e.key<='9') switchWep(parseInt(e.key)-1); 
             if(e.code==='KeyR') activateRage(); 
             if(e.code==='KeyI') toggleInventory(); 
-            if(e.code==='KeyE' && canOpenShop && !shopOpen) openShop();
+            if(e.code==='KeyE') {
+                if(canOpenShop && !shopOpen) openShop();
+                else if(canOpenTrainer && !trainerOpen) openTrainer();
+            }
         });
         document.addEventListener('keyup',e=>keys[e.code]=false);
         
@@ -1334,11 +1491,20 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
 
         // --- UPDATED SHOOTING LOGIC (CONVERGENCE FIXED) ---
         document.addEventListener('mousedown', ()=> {
-            if(isInventoryOpen || shopOpen) return;
+            if(isInventoryOpen || shopOpen || trainerOpen) return;
             if(document.pointerLockElement!==document.body) document.body.requestPointerLock();
             else if(swingT<=0) {
                 const w = weapons[weapons[curWep] ? curWep : 0];
-                let dmgMult = (rageMode ? 3 : 1);
+                
+                // --- APPLY TRAINER STRENGTH ---
+                let dmgMult = (1 + (statLevels.str * 0.1)) * (rageMode ? 3 : 1);
+                
+                // Crit Logic (Now fixed at 5% base unless item modified, Strength just boosts damage now)
+                if(Math.random() < 0.05) {
+                    dmgMult *= 2;
+                    spawnStyleText("CRIT!", "#ff00ff");
+                }
+
                 swingT = Math.PI / (1 * (rageMode ? 2 : 1));
 
                 // 1. Calculate Focus Point (Exactly where crosshair is)
@@ -1407,6 +1573,12 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
                 if(idx > -1) {
                     scene.remove(mob.mesh); mobs.splice(idx, 1); mob.mesh.children.forEach(c=> { if(mobHitboxes.includes(c)) mobHitboxes.splice(mobHitboxes.indexOf(c),1); }); spawnParticles(mob.mesh.position, 30, mats.partRed, 2);
                     
+                    // --- XP LOGIC ---
+                    let xpGain = 20 + (wave * 5);
+                    if(mob.type === 'boss') xpGain *= 5;
+                    if(mob.type === 'titan') xpGain *= 20;
+                    gainXp(xpGain);
+
                     // --- LOOT LOGIC ---
                     
                     // Meteor Staff Drop Chance (ID: 15)
@@ -1445,14 +1617,14 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
                 }
             }
         }
-        document.addEventListener('mousemove',e=>{ if(document.pointerLockElement===document.body && !isInventoryOpen && !shopOpen){ camera.rotation.y-=e.movementX*0.002; camera.rotation.x-=e.movementY*0.002; } });
+        document.addEventListener('mousemove',e=>{ if(document.pointerLockElement===document.body && !isInventoryOpen && !shopOpen && !trainerOpen){ camera.rotation.y-=e.movementX*0.002; camera.rotation.x-=e.movementY*0.002; } });
 
         // --- GAME LOOP ---
         const clock = new THREE.Clock();
         function animate() {
             requestAnimationFrame(animate); const dt = Math.min(clock.getDelta(), 0.1); const t = Date.now()*0.001;
            
-            if (isInventoryOpen || shopOpen) { renderer.render(scene, camera); return; }
+            if (isInventoryOpen || shopOpen || trainerOpen) { renderer.render(scene, camera); return; }
 
             if(isPrepPhase) {
                 prepTimer -= dt; document.getElementById('prep-timer').innerText = "PREPARE: " + Math.ceil(prepTimer);
@@ -1476,8 +1648,15 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
                 merchantGroup.userData.sign.position.y = 4.5 + Math.sin(merchantGroup.userData.time*2)*0.2;
                 merchantGroup.userData.bot.rotation.y = Math.sin(merchantGroup.userData.time)*0.3;
                 const distToMerchant = new THREE.Vector3(player.x, 0, player.z).distanceTo(merchantGroup.position);
-                if(distToMerchant < 6) { canOpenShop = true; document.getElementById('shop-hint').style.display = 'block'; } else { canOpenShop = false; document.getElementById('shop-hint').style.display = 'none'; }
-            } else { canOpenShop = false; document.getElementById('shop-hint').style.display = 'none'; }
+                if(distToMerchant < 6) { canOpenShop = true; document.getElementById('shop-hint').style.display = 'block'; } else { canOpenShop = false; }
+            } else { canOpenShop = false; }
+
+            if(trainerGroup && trainerGroup.visible) {
+                const distToTrainer = new THREE.Vector3(player.x, 0, player.z).distanceTo(trainerGroup.position);
+                if(distToTrainer < 6) { canOpenTrainer = true; document.getElementById('shop-hint').style.display = 'block'; } else { canOpenTrainer = false; }
+            } else { canOpenTrainer = false; }
+
+            if(!canOpenShop && !canOpenTrainer) document.getElementById('shop-hint').style.display = 'none';
 
             if(player.hp < player.maxHp && player.hp > 0) { player.hp += player.regen * dt; if(player.hp > player.maxHp) player.hp = player.maxHp; updateHUD(); }
             if(player.abilities.autoRage > 0) addRage(dt * 5);
@@ -1492,7 +1671,14 @@ I have removed the **Spiders** from the game. They will no longer spawn on the w
                 let spd = 10 * player.abilities.speed * (rageMode ? 2 : 1);
                 if(player.isClimbing) { player.vy = 0; player.y += 10 * dt; if(keys['KeyS']) player.y -= 15 * dt; player.ground = true; }
                 else {
-                    if(dash.cooldown > 0) dash.cooldown -= dt; if(keys['ShiftLeft'] && dash.cooldown <= 0 && mov.lengthSq()>0) { dash.cooldown = dash.maxCool; player.vy = 5; spd = 60; shakeScreen(0.3); spawnParticles(new THREE.Vector3(player.x, player.y, player.z), 10, mats.player); document.getElementById('flash-overlay').style.opacity=0.3; setTimeout(()=>document.getElementById('flash-overlay').style.opacity=0, 100); }
+                    if(dash.cooldown > 0) dash.cooldown -= dt; 
+                    
+                    // --- APPLY TRAINER ENDURANCE (Reduces Dash Cooldown) ---
+                    // Max Endurance (Level 50) reduces CD from 1.5s to 0.2s
+                    const dashCD = Math.max(0.2, 1.5 - (statLevels.end * 0.026));
+                    dash.maxCool = dashCD;
+
+                    if(keys['ShiftLeft'] && dash.cooldown <= 0 && mov.lengthSq()>0) { dash.cooldown = dash.maxCool; player.vy = 5; spd = 60; shakeScreen(0.3); spawnParticles(new THREE.Vector3(player.x, player.y, player.z), 10, mats.player); document.getElementById('flash-overlay').style.opacity=0.3; setTimeout(()=>document.getElementById('flash-overlay').style.opacity=0, 100); }
                     mov.normalize().multiplyScalar(spd * dt); player.x += mov.x; player.z += mov.z; if(keys['Space'] && player.ground) player.vy = 15 * player.abilities.jump; player.vy -= 40 * dt; player.y += player.vy * dt;
                 }
                 document.getElementById('dash-fill').style.width = (1 - Math.max(0, dash.cooldown/dash.maxCool))*100 + "%";
